@@ -13,7 +13,36 @@
 
 export interface Env {
   AI: Ai;
+  DURABLE_OBJECTS: DurableObjectNamespace;
 }
+
+export class DURABLE_OBJECTS {
+  private state: DurableObjectState;
+  private env: Env;
+
+  constructor(state: DurableObjectState, env: Env) {
+    this.state = state;
+    this.env = env;
+  };
+  
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/store" && request.method === "POST") {
+      const data = await request.json();
+      await this.state.storage.put("session", data);
+      return new Response(JSON.stringify({ success: true }));
+    }
+    
+    // Get data
+    if (url.pathname === "/get") {
+      const data = await this.state.storage.get("session");
+      return new Response(JSON.stringify(data || {}));
+    }
+    
+    return new Response("Not found", { status: 404 });
+}
+};
 
 function create_prompt(cv: string, job_desc: string): string {
   return `You are an expert ATS (Applicant Tracking System), called Taseen's ATS, analyzer and career consultant. Your task is to meticulously analyze a CV against a specific job description and provide actionable feedback.
@@ -128,7 +157,6 @@ export default {
       const airesponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
         prompt: prompt,
       }) as { response: string };
-
 
       const parsedResponse = JSON.parse(airesponse.response);
 

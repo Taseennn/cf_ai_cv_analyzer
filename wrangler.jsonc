@@ -12,7 +12,15 @@
 	},
 	"ai":{
 		"binding":"AI"
-	}
+	},
+	"durable_objects": {
+        "bindings": [
+            {
+                "name": "DURABLE_OBJECTS",
+                "class_name": "DURABLE_OBJECTS"
+            }
+        ]
+    },
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
