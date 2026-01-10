@@ -272,6 +272,7 @@ ai-ats-cv-analyzer/
 ## 🚢 Deployment
 
 ### Deploy Worker
+## UNTESTED
 ```bash
 wrangler deploy
 ```
@@ -289,45 +290,3 @@ Update `API_URL` in `frontend/script.js` to your deployed Worker URL.
 - No sensitive data stored (CVs are temporary, session-based)
 - Session IDs are cryptographically random UUIDs
 - Input validation on all endpoints
-
-## 🎓 Learning Outcomes
-
-This project demonstrates:
-- ✅ **LLM Integration**: Prompt engineering and response parsing
-- ✅ **Stateful Serverless**: Using Durable Objects for persistent state
-- ✅ **Multi-step Orchestration**: Coordinating AI, storage, and API responses
-- ✅ **Full-stack Development**: Backend APIs and frontend integration
-- ✅ **Edge Computing**: Cloudflare Workers at Internet scale
-
-## 📊 Future Enhancements
-
-- [ ] PDF/DOCX file upload support
-- [ ] Export analysis as PDF report
-- [ ] CV version comparison
-- [ ] ATS keyword heatmap visualization
-- [ ] Streaming AI responses
-- [ ] Multi-language support
-- [ ] Authentication for saved analyses
-
-## 🤝 Contributing
-
-This is a learning project built as part of a 1-day development challenge. Feedback and suggestions are welcome!
-
-## 📄 License
-
-MIT License - feel free to use this project for learning and reference.
-
-## 👤 Author
-
-**Taseen Awan**
-- GitHub: [@Taseennn](https://github.com/Taseennn)
-- Email: taseenawan90@gmail.com
-
-## 🙏 Acknowledgments
-
-- Cloudflare for the Workers AI and Durable Objects platform
-- Anthropic's Claude for architectural guidance and development support
-
----
-
-**Built with ☁️ Cloudflare Workers, 🤖 Workers AI, and 💾 Durable Objects**
