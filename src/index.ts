@@ -136,33 +136,56 @@ function create_prompt(cv: string, job_desc: string): string {
 
 export default {
   async fetch(request, env): Promise<Response> {
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Content-Type': 'application/json'
+    };
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { 
+        status: 204,
+        headers: corsHeaders 
+      });
+    }
 
     const url = new URL(request.url);
 
-    if (url.pathname === "/analyze") {
-      if (request.method !== 'POST') {
-        return new Response('Method not allowed', { status: 405 });
-      }
-
+    if (url.pathname === "/analyze" && request.method === "POST") {
       try {
         const body = await request.json() as { cv: string; job_desc: string };
         
         if (!body.cv || !body.job_desc) {
+        
           return new Response(
             JSON.stringify({ error: 'Missing cv or job_desc in request body' }), 
             { 
               status: 400,
-              headers: { 'Content-Type': 'application/json' }
+              headers: corsHeaders
             }
           );
         }
         const prompt = create_prompt(body.cv, body.job_desc);
-
         const airesponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-          prompt: prompt,
+          prompt: prompt,max_tokens: 2048
         }) as { response: string };
 
-        const parsedResponse = JSON.parse(airesponse.response);
+        let cleanedResponse = airesponse.response.trim();
+
+        cleanedResponse = cleanedResponse.replace(/```json\n?/g, '');
+        cleanedResponse = cleanedResponse.replace(/```\n?/g, '');
+
+        const firstBrace = cleanedResponse.indexOf('{');
+        const lastBrace = cleanedResponse.lastIndexOf('}');
+
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error('No JSON object found in AI response');
+        }
+
+        cleanedResponse = cleanedResponse.substring(firstBrace, lastBrace + 1);
+
+        const parsedResponse = JSON.parse(cleanedResponse);
 
         // STORE INTO DURABLE OBJECT
         const id = crypto.randomUUID();
@@ -182,30 +205,35 @@ export default {
       
         return new Response(JSON.stringify({
           session_id: id,
-          parsedResponse,
+          ...parsedResponse, 
         }), {
-          headers: { 'Content-Type': 'application/json' }
+          headers: corsHeaders
         });
 
       } catch (error) {
+        console.error("Error processing /analyze request:", error);
         return new Response(
           JSON.stringify({ error: 'Invalid request format' }), 
           { 
             status: 400,
-            headers: { 'Content-Type': 'application/json' }
+            headers: corsHeaders
           }
         );
       }
     }
+
     if (url.pathname === "/sessions") {
       if (request.method !== 'GET') {
-        return new Response('Method not allowed', { status: 405 });
+        return new Response('Method not allowed', { 
+          status: 405,
+          headers: corsHeaders
+        });
       }
       const session_id = url.searchParams.get("session_id");
       if (!session_id) {
         return new Response(JSON.stringify({ error: "Missing session_id" }), {
           status: 400,
-          headers: { "Content-Type": "application/json" }
+          headers: corsHeaders
         });
       }
 
@@ -215,9 +243,13 @@ export default {
       const response = await durableObjectStub.fetch("https://taseen/get");
 
       return new Response(await response.text(), {
-        headers: { "Content-Type": "application/json" }
+        headers: corsHeaders
       });
     }
-    return new Response("Not found", { status: 404 });
+
+    return new Response("Not found", { 
+      status: 404,
+      headers: corsHeaders
+    });
   },
 } satisfies ExportedHandler<Env>;

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS CV Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Input for CV and Job Description</h1>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="cv-input">CV / Resume</label>
+                <textarea id="cv-input" placeholder="Paste your CV or resume here..."></textarea>
+            </div>
+            <div class="input-group">
+                <label for="job-input">Job Description</label>
+                <textarea id="job-input" placeholder="Paste the job description here..."></textarea>
+            </div>
+        </div>
+
+        <div class="button-section">
+            <button class="submit-btn" id="analyze-btn">Submit Button</button>
+            <div class="loading" id="loading">Analyzing... Please wait</div>
+        </div>
+
+        <div class="results-section" id="results" style="display: none;">
+            <div class="result-box">
+                <h3>Summary</h3>
+                <p id="summary-text"></p>
+            </div>
+            <div class="result-box">
+                <h3>Weaknesses</h3>
+                <ul id="weaknesses-list"></ul>
+            </div>
+            <div class="result-box">
+                <h3>Improvements</h3>
+                <ul id="improvements-list"></ul>
+            </div>
+            <div class="result-box">
+                <h3>Strengths</h3>
+                <ul id="strengths-list"></ul>
+            </div>
+        </div>
+
+        <div class="score-section" id="score-section" style="display: none;">
+            <div class="score-circle">
+                <svg width="200" height="200">
+                    <circle class="background" cx="100" cy="100" r="90"></circle>
+                    <circle class="progress" id="progress-circle" cx="100" cy="100" r="90" 
+                            stroke-dasharray="565.48" stroke-dashoffset="565.48"></circle>
+                </svg>
+                <div class="score-text">
+                    <div class="score-value" id="score-value">0</div>
+                    <div class="score-label">ATS Score</div>
+                </div>
+            </div>
+            <div class="status-badge" id="status-badge">Fail/Pass</div>
+        </div>
+
+        <div class="session-id" id="session-info" style="display: none;">
+            Session ID: <span id="session-id"></span>
+        </div>
+
+        <div class="chat-section" id="chat-section">
+            <h3 style="color: #00ff88; margin-bottom: 20px;">Ask Follow-up Questions</h3>
+            <div class="chat-history" id="chat-history"></div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Ask a question about your analysis...">
+                <button class="chat-btn" id="chat-btn">Ask</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
