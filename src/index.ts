@@ -33,8 +33,7 @@ export class DURABLE_OBJECTS {
       await this.state.storage.put("session", data);
       return new Response(JSON.stringify({ success: true }));
     }
-    
-    // Get data
+
     if (url.pathname === "/get") {
       const data = await this.state.storage.get("session");
       return new Response(JSON.stringify(data || {}));
@@ -53,10 +52,8 @@ export class DURABLE_OBJECTS {
         data.chat_history = [];
       }
       
-      // Add new chat message
       data.chat_history.push({ question, answer, timestamp: Date.now() });
       
-      // Save back
       await this.state.storage.put("session", data);
   
       return new Response(JSON.stringify({ success: true }));
@@ -118,11 +115,11 @@ function create_prompt(cv: string, job_desc: string): string {
       "pass": boolean,
       "atsScore": number,
       "strengths": [
-        "Specific strength with evidence (e.g., '5 years Python experience matches required 3+ years')",
+        "Specific strength with evidence from CV",
         "Include 3-5 concrete strengths tied to job requirements"
       ],
       "weaknesses": [
-        "Specific gap or concern (e.g., 'Missing AWS certification listed as required')",
+        "Specific gap or concern with evidence from CV",
         "Include 3-5 notable weaknesses or missing elements"
       ],
       "improvements": [
@@ -282,7 +279,6 @@ export default {
           );
         }
 
-        // Get session data from Durable Object
         const durableObjectId = env.DURABLE_OBJECTS.idFromName(body.session_id);
         const durableObjectStub = env.DURABLE_OBJECTS.get(durableObjectId);
         const sessionResponse = await durableObjectStub.fetch("https://taseen/get");
@@ -292,7 +288,7 @@ export default {
           analysis: any;
           chat_history?: Array<{ question: string; answer: string }>;};
 
-        // Build chat prompt with context
+
         const chatPrompt = `You are an ATS career consultant. A candidate has asked a question about their CV analysis.
 
     Context:
@@ -304,7 +300,6 @@ export default {
 
     Provide a helpful, specific answer based on the analysis. Keep it concise (2-3 sentences).`;
 
-        // Call AI
         const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
           prompt: chatPrompt,
           max_tokens: 512
@@ -312,7 +307,6 @@ export default {
 
         const answer = aiResponse.response.trim();
 
-        // Store chat in Durable Object (you'll implement this next)
         await durableObjectStub.fetch("https://taseen/add-chat", {
           method: "POST",
           body: JSON.stringify({ question: body.question, answer })
