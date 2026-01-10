@@ -165,9 +165,25 @@ export default {
         const parsedResponse = JSON.parse(airesponse.response);
 
         // STORE INTO DURABLE OBJECT
+        const id = crypto.randomUUID();
+        const durableObjectId = env.DURABLE_OBJECTS.idFromName(id);
+        const durableObjectStub = env.DURABLE_OBJECTS.get(durableObjectId);
 
-
-        return new Response(JSON.stringify(parsedResponse), {
+        await durableObjectStub.fetch("https://taseen/store", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cv: body.cv,
+            job_desc: body.job_desc,
+            analysis: parsedResponse,
+            timestamp: Date.now(),
+          }),
+        });
+      
+        return new Response(JSON.stringify({
+          session_id: id,
+          parsedResponse,
+        }), {
           headers: { 'Content-Type': 'application/json' }
         });
 
@@ -185,8 +201,22 @@ export default {
       if (request.method !== 'GET') {
         return new Response('Method not allowed', { status: 405 });
       }
+      const session_id = url.searchParams.get("session_id");
+      if (!session_id) {
+        return new Response(JSON.stringify({ error: "Missing session_id" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
 
-      // SAVE INTO DURABLE OBJECT
+      const durableObjectId = env.DURABLE_OBJECTS.idFromName(session_id);
+      const durableObjectStub = env.DURABLE_OBJECTS.get(durableObjectId);
+      
+      const response = await durableObjectStub.fetch("https://taseen/get");
+
+      return new Response(await response.text(), {
+        headers: { "Content-Type": "application/json" }
+      });
     }
     return new Response("Not found", { status: 404 });
   },
