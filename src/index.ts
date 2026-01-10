@@ -39,7 +39,28 @@ export class DURABLE_OBJECTS {
       const data = await this.state.storage.get("session");
       return new Response(JSON.stringify(data || {}));
     }
-    
+    if (url.pathname === "/add-chat" && request.method === "POST") {
+      const { question, answer } = await request.json() as { question: string; answer: string };
+      
+      const data = await this.state.storage.get("session") as {    
+        cv?: string;
+        job_desc?: string;
+        analysis?: any;
+        timestamp?: number;
+        chat_history?: Array<{ question: string; answer: string; timestamp: number }>;} || {};
+
+      if (!data.chat_history) {
+        data.chat_history = [];
+      }
+      
+      // Add new chat message
+      data.chat_history.push({ question, answer, timestamp: Date.now() });
+      
+      // Save back
+      await this.state.storage.put("session", data);
+  
+      return new Response(JSON.stringify({ success: true }));
+    }
     return new Response("Not found", { status: 404 });
 }
 };
@@ -247,6 +268,68 @@ export default {
       });
     }
 
+    if (url.pathname === "/chat" && request.method === "POST") {
+      try {
+        const body = await request.json() as { 
+          session_id: string; 
+          question: string; 
+        };
+        
+        if (!body.session_id || !body.question) {
+          return new Response(
+            JSON.stringify({ error: 'Missing session_id or question' }), 
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        // Get session data from Durable Object
+        const durableObjectId = env.DURABLE_OBJECTS.idFromName(body.session_id);
+        const durableObjectStub = env.DURABLE_OBJECTS.get(durableObjectId);
+        const sessionResponse = await durableObjectStub.fetch("https://taseen/get");
+        const sessionData = await sessionResponse.json() as {     
+          cv: string;
+          job_desc: string;
+          analysis: any;
+          chat_history?: Array<{ question: string; answer: string }>;};
+
+        // Build chat prompt with context
+        const chatPrompt = `You are an ATS career consultant. A candidate has asked a question about their CV analysis.
+
+    Context:
+    - CV: ${sessionData.cv}
+    - Job Description: ${sessionData.job_desc}
+    - Analysis: ${JSON.stringify(sessionData.analysis)}
+
+    User Question: ${body.question}
+
+    Provide a helpful, specific answer based on the analysis. Keep it concise (2-3 sentences).`;
+
+        // Call AI
+        const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+          prompt: chatPrompt,
+          max_tokens: 512
+        }) as { response: string };
+
+        const answer = aiResponse.response.trim();
+
+        // Store chat in Durable Object (you'll implement this next)
+        await durableObjectStub.fetch("https://taseen/add-chat", {
+          method: "POST",
+          body: JSON.stringify({ question: body.question, answer })
+        });
+
+        return new Response(JSON.stringify({ answer }), {
+          headers: corsHeaders
+        });
+
+      } catch (error) {
+        console.error("Chat error:", error);
+        return new Response(
+          JSON.stringify({ error: 'Chat failed' }), 
+          { status: 500, headers: corsHeaders }
+        );
+      }
+    }
     return new Response("Not found", { 
       status: 404,
       headers: corsHeaders

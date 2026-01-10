@@ -41,6 +41,53 @@ async function analyzeCV() {
     }
 }
 
+async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const question = input.value.trim();
+
+    if (!question || !currentSessionId) return;
+
+    const chatHistory = document.getElementById('chat-history');
+    
+    // Add user message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'chat-message user';
+    userMsg.textContent = question;
+    chatHistory.appendChild(userMsg);
+
+    input.value = '';
+    input.disabled = true;
+
+    try {
+        // Call your /chat endpoint
+        const response = await fetch(`${API_URL}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: currentSessionId,
+                question: question
+            })
+        });
+
+        const data = await response.json();
+
+        // Add AI response
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'chat-message ai';
+        aiMsg.textContent = data.answer;
+        chatHistory.appendChild(aiMsg);
+
+    } catch (error) {
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'chat-message ai';
+        errorMsg.textContent = 'Error: ' + error.message;
+        chatHistory.appendChild(errorMsg);
+    } finally {
+        input.disabled = false;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+}
+
 function displayResults(data) {
     // Show results sections
     document.getElementById('results').style.display = 'grid';
@@ -99,30 +146,4 @@ function displayResults(data) {
 
     // Display session ID
     document.getElementById('session-id').textContent = currentSessionId;
-}
-
-async function sendChatMessage() {
-    const input = document.getElementById('chat-input');
-    const question = input.value.trim();
-
-    if (!question || !currentSessionId) return;
-
-    const chatHistory = document.getElementById('chat-history');
-    
-    // Add user message
-    const userMsg = document.createElement('div');
-    userMsg.className = 'chat-message user';
-    userMsg.textContent = question;
-    chatHistory.appendChild(userMsg);
-
-    input.value = '';
-
-    // TODO: Implement /chat endpoint call
-    // For now, just show a placeholder response
-    const aiMsg = document.createElement('div');
-    aiMsg.className = 'chat-message ai';
-    aiMsg.textContent = 'Chat endpoint not yet implemented. Connect this to your /chat Worker endpoint.';
-    chatHistory.appendChild(aiMsg);
-
-    chatHistory.scrollTop = chatHistory.scrollHeight;
 }
