@@ -24,7 +24,7 @@ export class DURABLE_OBJECTS {
     this.state = state;
     this.env = env;
   };
-  
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
@@ -136,42 +136,58 @@ function create_prompt(cv: string, job_desc: string): string {
 
 export default {
   async fetch(request, env): Promise<Response> {
-    if (request.method !== 'POST') {
-      return new Response('Method not allowed', { status: 405 });
-    }
 
-    try {
-      const body = await request.json() as { cv: string; job_desc: string };
-      
-      if (!body.cv || !body.job_desc) {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/analyze") {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+
+      try {
+        const body = await request.json() as { cv: string; job_desc: string };
+        
+        if (!body.cv || !body.job_desc) {
+          return new Response(
+            JSON.stringify({ error: 'Missing cv or job_desc in request body' }), 
+            { 
+              status: 400,
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
+        }
+        const prompt = create_prompt(body.cv, body.job_desc);
+
+        const airesponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+          prompt: prompt,
+        }) as { response: string };
+
+        const parsedResponse = JSON.parse(airesponse.response);
+
+        // STORE INTO DURABLE OBJECT
+
+
+        return new Response(JSON.stringify(parsedResponse), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+      } catch (error) {
         return new Response(
-          JSON.stringify({ error: 'Missing cv or job_desc in request body' }), 
+          JSON.stringify({ error: 'Invalid request format' }), 
           { 
             status: 400,
             headers: { 'Content-Type': 'application/json' }
           }
         );
       }
-      const prompt = create_prompt(body.cv, body.job_desc);
-
-      const airesponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-        prompt: prompt,
-      }) as { response: string };
-
-      const parsedResponse = JSON.parse(airesponse.response);
-
-      return new Response(JSON.stringify(parsedResponse), {
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-    } catch (error) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid request format' }), 
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
     }
+    if (url.pathname === "/sessions") {
+      if (request.method !== 'GET') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+
+      // SAVE INTO DURABLE OBJECT
+    }
+    return new Response("Not found", { status: 404 });
   },
 } satisfies ExportedHandler<Env>;
