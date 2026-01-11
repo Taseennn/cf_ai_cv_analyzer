@@ -148,6 +148,10 @@ npm run dev
 # or
 wrangler dev
 
+ℹ️ This runs the Worker locally.
+Workers AI requires a Cloudflare account and wrangler login.
+Without login, the app runs in local/mock AI mode.
+
 # Worker will run at http://localhost:8787
 ```
 
