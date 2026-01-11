@@ -17,4 +17,10 @@
             }
         ]
     },
+	"migrations": [
+		{
+			"tag":"v1",
+			"new_classes": ["DURABLE_OBJECTS"]
+		}
+	]
 }
