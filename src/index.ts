@@ -25,6 +25,7 @@ export class DURABLE_OBJECTS {
     this.env = env;
   };
 
+  // Handle fetch requests
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
@@ -34,10 +35,13 @@ export class DURABLE_OBJECTS {
       return new Response(JSON.stringify({ success: true }));
     }
 
+    // handle get request
     if (url.pathname === "/get") {
       const data = await this.state.storage.get("session");
       return new Response(JSON.stringify(data || {}));
     }
+
+    // handle add-chat request
     if (url.pathname === "/add-chat" && request.method === "POST") {
       const { question, answer } = await request.json() as { question: string; answer: string };
       
@@ -47,7 +51,9 @@ export class DURABLE_OBJECTS {
         analysis?: any;
         timestamp?: number;
         chat_history?: Array<{ question: string; answer: string; timestamp: number }>;} || {};
+      
 
+      // create chat_history array if it doesn't exist already
       if (!data.chat_history) {
         data.chat_history = [];
       }
@@ -64,7 +70,7 @@ export class DURABLE_OBJECTS {
 
 function create_prompt(cv: string, job_desc: string): string {
   return `You are an expert ATS (Applicant Tracking System), called Taseen's ATS, analyzer and career consultant. Your task is to meticulously analyze a CV against a specific job description and provide actionable feedback.
-    DO NOT BE AFRAID TO CRITICIZE THE CANDIDATE. YOUR GOAL IS TO HELP THEM IMPROVE THEIR CHANCES OF PASSING ATS AND GETTING INTERVIEWS.
+    DO NOT BE AFRAID TO CRITICIZE THE CANDIDATE GIVE A 0 IF DESERVED. YOUR GOAL IS TO HELP THEM IMPROVE THEIR CHANCES OF PASSING ATS AND GETTING INTERVIEWS.
 
     Your analysis should cover the following key areas:
 
@@ -166,6 +172,8 @@ function create_prompt(cv: string, job_desc: string): string {
 
 export default {
   async fetch(request, env): Promise<Response> {
+
+    // Handle CORS preflight and set CORS headers
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -181,7 +189,9 @@ export default {
     }
 
     const url = new URL(request.url);
+    
 
+    // Handle /analyze endpoint
     if (url.pathname === "/analyze" && request.method === "POST") {
       try {
         const body = await request.json() as { cv: string; job_desc: string };
@@ -200,7 +210,9 @@ export default {
         const airesponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
           prompt: prompt,max_tokens: 2048
         }) as { response: string };
+        
 
+        // PARSE AI RESPONSE, CLEANING ANY MARKDOWN OR EXTRA TEXT
         let cleanedResponse = airesponse.response.trim();
 
         cleanedResponse = cleanedResponse.replace(/```json\n?/g, '');
@@ -208,7 +220,8 @@ export default {
 
         const firstBrace = cleanedResponse.indexOf('{');
         const lastBrace = cleanedResponse.lastIndexOf('}');
-
+        
+        // Missing braces for JSON object
         if (firstBrace === -1 || lastBrace === -1) {
           throw new Error('No JSON object found in AI response');
         }
@@ -232,7 +245,8 @@ export default {
             timestamp: Date.now(),
           }),
         });
-      
+        
+        
         return new Response(JSON.stringify({
           session_id: id,
           ...parsedResponse, 
@@ -251,7 +265,7 @@ export default {
         );
       }
     }
-
+    // Handle /sessions endpoint
     if (url.pathname === "/sessions") {
       if (request.method !== 'GET') {
         return new Response('Method not allowed', { 
@@ -266,17 +280,17 @@ export default {
           headers: corsHeaders
         });
       }
-
+      // Retrieve session datat
       const durableObjectId = env.DURABLE_OBJECTS.idFromName(session_id);
       const durableObjectStub = env.DURABLE_OBJECTS.get(durableObjectId);
       
-      const response = await durableObjectStub.fetch("https://taseen/get");
+      const response = await durableObjectStub.fetch("https://taseen/get"); //fake URL, just need /get to route
 
       return new Response(await response.text(), {
         headers: corsHeaders
       });
     }
-
+    // Handle /chat endpoint
     if (url.pathname === "/chat" && request.method === "POST") {
       try {
         const body = await request.json() as { 
@@ -290,7 +304,7 @@ export default {
             { status: 400, headers: corsHeaders }
           );
         }
-
+        // Retrieve session data
         const durableObjectId = env.DURABLE_OBJECTS.idFromName(body.session_id);
         const durableObjectStub = env.DURABLE_OBJECTS.get(durableObjectId);
         const sessionResponse = await durableObjectStub.fetch("https://taseen/get");
@@ -300,18 +314,20 @@ export default {
           analysis: any;
           chat_history?: Array<{ question: string; answer: string }>;};
 
-
+        // Create chat prompt
         const chatPrompt = `You are an ATS career consultant. A candidate has asked a question about their CV analysis.
 
-    Context:
-    - CV: ${sessionData.cv}
-    - Job Description: ${sessionData.job_desc}
-    - Analysis: ${JSON.stringify(sessionData.analysis)}
+              Context:
+              - CV: ${sessionData.cv}
+              - Job Description: ${sessionData.job_desc}
+              - Analysis: ${JSON.stringify(sessionData.analysis)}
 
-    User Question: ${body.question}
+              User Question: ${body.question}
 
-    Provide a helpful, specific answer based on the analysis. Keep it concise (2-3 sentences).`;
+              Provide a helpful, specific answer based on the analysis. Keep it concise (2-3 sentences).`;
+        
 
+        // get ai response
         const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
           prompt: chatPrompt,
           max_tokens: 512
@@ -319,7 +335,8 @@ export default {
 
         const answer = aiResponse.response.trim();
 
-        await durableObjectStub.fetch("https://taseen/add-chat", {
+        await durableObjectStub.fetch("https://taseen/add-chat", { //fake URL, just need /add-chat to route
+          headers: { "Content-Type": "application/json" },
           method: "POST",
           body: JSON.stringify({ question: body.question, answer })
         });
