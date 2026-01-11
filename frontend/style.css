@@ -15,21 +15,21 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background-color: #2a2a2a;
-    border: 2px solid #00ff88;
+    background-color: #14161b;
+    border: 2px solid #1b1e24;
     border-radius: 8px;
     overflow: hidden;
 }
 
 .header {
-    background-color: #1f1f1f;
+    background-color: #14161b;
     padding: 30px;
     text-align: center;
-    border-bottom: 2px solid #00ff88;
+    border-bottom: 2px solid #1199ae;
 }
 
 .header h1 {
-    color: #00ff88;
+    color: #1199ae;
     font-size: 24px;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -48,7 +48,7 @@ body {
 }
 
 .input-group label {
-    color: #00ff88;
+    color: #1199ae;
     margin-bottom: 10px;
     font-weight: 600;
     text-transform: uppercase;
@@ -57,7 +57,7 @@ body {
 
 textarea {
     background-color: #1a1a1a;
-    border: 2px solid #00ff88;
+    border: 2px solid #1199ae;
     border-radius: 4px;
     color: #e0e0e0;
     padding: 15px;
@@ -75,7 +75,7 @@ textarea:focus {
 
 .results-section {
     padding: 30px;
-    border-top: 2px solid #00ff88;
+    border-top: 2px solid #1199ae;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
@@ -89,7 +89,7 @@ textarea:focus {
 }
 
 .result-box h3 {
-    color: #00ff88;
+    color: #1199ae;
     margin-bottom: 15px;
     text-transform: uppercase;
     font-size: 16px;
@@ -111,7 +111,7 @@ textarea:focus {
 
 .score-section {
     padding: 30px;
-    border-top: 2px solid #00ff88;
+    border-top: 2px solid #1199ae;
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -139,7 +139,7 @@ textarea:focus {
 }
 
 .score-circle .progress {
-    stroke: #00ff88;
+    stroke: #1199ae;
     stroke-linecap: round;
     transition: stroke-dashoffset 1s ease;
 }
@@ -155,7 +155,7 @@ textarea:focus {
 .score-value {
     font-size: 48px;
     font-weight: bold;
-    color: #00ff88;
+    color: #1199ae;
 }
 
 .score-label {
@@ -174,7 +174,7 @@ textarea:focus {
 }
 
 .status-pass {
-    background-color: #00ff88;
+    background-color: #1199ae;
     color: #1a1a1a;
 }
 
@@ -186,11 +186,11 @@ textarea:focus {
 .button-section {
     padding: 30px;
     text-align: center;
-    border-top: 2px solid #00ff88;
+    border-top: 2px solid #1199ae;
 }
 
 .submit-btn {
-    background-color: #00ff88;
+    background-color: #1199ae;
     color: #1a1a1a;
     border: none;
     padding: 18px 60px;
@@ -204,8 +204,8 @@ textarea:focus {
 }
 
 .submit-btn:hover {
-    background-color: #00ffaa;
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    background-color: #1199ae;
+    box-shadow: 0 0 20px rgba(251, 251, 251, 0.399);
     transform: translateY(-2px);
 }
 
@@ -222,7 +222,7 @@ textarea:focus {
 
 .chat-section {
     padding: 30px;
-    border-top: 2px solid #00ff88;
+    border-top: 2px solid #1199ae;
     display: none;
 }
 
@@ -263,7 +263,7 @@ textarea:focus {
 .chat-input {
     flex: 1;
     background-color: #1a1a1a;
-    border: 2px solid #00ff88;
+    border: 2px solid #1199ae;
     border-radius: 4px;
     color: #e0e0e0;
     padding: 15px;
@@ -273,12 +273,12 @@ textarea:focus {
 
 .chat-input:focus {
     outline: none;
-    border-color: #00ffaa;
+    border-color: #1199ae;
     box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
 }
 
 .chat-btn {
-    background-color: #00ff88;
+    background-color: #1199ae;
     color: #1a1a1a;
     border: none;
     padding: 15px 30px;
@@ -291,7 +291,7 @@ textarea:focus {
 }
 
 .chat-btn:hover {
-    background-color: #00ffaa;
+    background-color: #1199ae;
 }
 
 .session-id {
@@ -306,7 +306,7 @@ textarea:focus {
 }
 
 .session-id span {
-    color: #00ff88;
+    color: #1199ae;
     font-weight: bold;
 }
 
@@ -314,7 +314,7 @@ textarea:focus {
     display: none;
     text-align: center;
     padding: 20px;
-    color: #00ff88;
+    color: #1199ae;
 }
 
 .loading.active {

@@ -9,6 +9,7 @@ document.getElementById('chat-input').addEventListener('keypress', (e) => {
 });
 
 async function analyzeCV() {
+    // Get input values
     const cv = document.getElementById('cv-input').value;
     const jobDesc = document.getElementById('job-input').value;
 
@@ -22,7 +23,9 @@ async function analyzeCV() {
     
     btn.disabled = true;
     loading.classList.add('active');
+    
 
+    // Call /analyze endpoint
     try {
         const response = await fetch(`${API_URL}/analyze`, {
             method: 'POST',
@@ -36,6 +39,7 @@ async function analyzeCV() {
     } catch (error) {
         alert('Error analyzing CV: ' + error.message);
     } finally {
+        // Re-enable button and hide loading
         btn.disabled = false;
         loading.classList.remove('active');
     }
@@ -59,7 +63,7 @@ async function sendChatMessage() {
     input.disabled = true;
 
     try {
-        // Call your /chat endpoint
+        // Call /chat endpoint
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
